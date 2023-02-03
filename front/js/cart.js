@@ -1,9 +1,10 @@
+/*------Section Panier------*/
+
 //Récupération des données depuis l'API
 async function fetchProducts(productId) {
     let response = await fetch(`http://localhost:3000/api/products/${productId}`);
     return await response.json();
 }
-
 
 //Récupération des données du localStrage
 let cartContent = JSON.parse(localStorage.getItem("cart-items"));
@@ -11,11 +12,9 @@ console.log(cartContent);
 
 //Génération des produits dans le panier
 async function generateProductOnCart() {
-
-    //Il faut récupérer les données de l'API via productID qui est égale à
-    //cartContent[i].id 
     for (let i = 0; i < cartContent.length; i++) {
 
+        //Récupération des informations d'un produit via son id dans l'API
         let productInfoList = await fetchProducts(cartContent[i].id);
 
         //Récupération de l'élément du DOM qui accueillera le panier
@@ -34,7 +33,7 @@ async function generateProductOnCart() {
 
         //Création d'une balise d'image
         const productImage = document.createElement("img")
-        productImage.src = productInfoList.imageUrl; // = imageUrl de la réponse API de l'objet partageant l'ID du cartContent
+        productImage.src = productInfoList.imageUrl;
         productImage.setAttribute("alt", "Photographie d'un canapé");
         productImageSection.appendChild(productImage);
 
@@ -50,7 +49,7 @@ async function generateProductOnCart() {
 
         //Création du contenu de la description du produit
         const productDescriptionName = document.createElement("h2");
-        productDescriptionName.textContent = cartContent[i].name;
+        productDescriptionName.textContent = productInfoList.name;
         productDescription.appendChild(productDescriptionName);
 
         const productDescriptionColor = document.createElement("p");
@@ -58,7 +57,7 @@ async function generateProductOnCart() {
         productDescription.appendChild(productDescriptionColor);
 
         const productDescriptionPrice = document.createElement("p");       
-        productDescriptionPrice.textContent = `${cartContent[i].price},00 €`;
+        productDescriptionPrice.textContent = `${productInfoList.price},00 €`;
         productDescription.appendChild(productDescriptionPrice);
 
         //Création d'une balise qui contiendra les paramètres du produit
@@ -84,7 +83,6 @@ async function generateProductOnCart() {
         productSettingsQuantityInput.setAttribute("max","100");
         productSettingsQuantityInput.setAttribute("value",`${cartContent[i].quantity}`);
         productSettingsQuantity.appendChild(productSettingsQuantityInput);
-        //Appel de la fonction de modification de la quantité
 
         //Création d'une balise qui contiendra la suppression du produit
         const productSettingsDeletion = document.createElement("div");
@@ -96,19 +94,27 @@ async function generateProductOnCart() {
         productSettingsDeletionText.classList.add("deleteItem");
         productSettingsDeletionText.textContent = "Supprimer";
         productSettingsDeletion.appendChild(productSettingsDeletionText);
+
         modifyProductFromCart(i);
     }
     deleteProductFromCart();
     getTotals();
 }
 
-function getTotals() {
+//Création d'une fonction pour calculer le total des prix/quantités
+async function getTotals() {
     //Calcul des valeurs totales de prix et de quantité
     let totalQuantity = 0;
     let totalPrice = 0;
+    let totalPricePerProducts = 0;
     for (let i = 0; i < cartContent.length; i++) {
+        //Récupération des informations d'un produit via son id dans l'API
+        let productInfoList = await fetchProducts(cartContent[i].id);
+
+        //Calculs des totaux
         totalQuantity += parseInt(cartContent[i].quantity);
-        totalPrice = totalQuantity * cartContent[i].price;
+        totalPricePerProducts = cartContent[i].quantity * productInfoList.price;
+        totalPrice += totalPricePerProducts;
     }
     //Ajout de la quantité totale d'articles sur l'élément du DOM correspondant
     const displayTotalQuantity = document.getElementById("totalQuantity");
@@ -125,21 +131,9 @@ function modifyProductFromCart(i) {
     //Récupération de l'élément input
     const productQuantityInput = document.getElementsByName("itemQuantity");
 
-    let totalProductPrice = cartContent[i].price * cartContent[i].quantity;
-    let totalQuantity = parseInt(cartContent[i].quantity);
-    let currentValue = productQuantityInput[i].value;
-
     //Ajout d'une event listener
     productQuantityInput[i].addEventListener('change', () => {
-        if (currentValue < productQuantityInput[i].value) {
-            totalProductPrice += cartContent[i].price;
-            totalQuantity++;
-            currentValue = productQuantityInput[i].value;
-        } else {
-            totalProductPrice -= cartContent[i].price;
-            totalQuantity--;
-            currentValue = productQuantityInput[i].value;
-        }
+
         //Modification de la valeur de la quantité dans le localStorage
         cartContent[i].quantity = parseInt(productQuantityInput[i].value);
         
@@ -150,12 +144,9 @@ function modifyProductFromCart(i) {
         //appel à la fonction qui fait les totaux
         getTotals();
     })
-    return {
-        price: totalProductPrice,
-        quantity: totalQuantity
-    };
 }
 
+//Création d'une fonction pour supprimer un produit du panier
 function deleteProductFromCart() {
     //Récupération de l'élement input
     const deleteElement = document.getElementsByClassName("deleteItem");
@@ -167,17 +158,27 @@ function deleteProductFromCart() {
 
         deleteElement[i].addEventListener('click', () => {
 
+            //Si la valeur des attributs "data-id" et "data-color" correspond à l'id et à la color du produit
             if (element[i].dataset.id === cartContent[i].id && element[i].dataset.color === cartContent[i].color) {
                 element[i].style.display= "none";
             }
 
+            //On retire le produit du panier
             cartContent.splice(i, 1);
 
+            //On stocke le nouveau tableau dans le localStorage
             let cartItem = JSON.stringify(cartContent);
             localStorage.setItem("cart-items", cartItem);
+
+            //On recalcule les totaux
             getTotals();
         })
     }
 }
 
+//Appel à la fonction principale
 generateProductOnCart();
+
+/*------Section Formulaire------*/
+
+
