@@ -154,12 +154,15 @@ async function getTotals() {
 function modifyProductFromCart(i) {
     //Récupération de l'élément input
     const productQuantityInput = document.getElementsByName("itemQuantity");
+    let element = document.querySelectorAll('[data-id]');
 
     //Ajout d'une event listener
     productQuantityInput[i].addEventListener('change', () => {
 
+        let innerIndex = cartContent.findIndex(item => item.id === element[i].dataset.id && item.color === element[i].dataset.color);
+
         //Modification de la valeur de la quantité dans le localStorage
-        cartContent[i].quantity = parseInt(productQuantityInput[i].value);
+        cartContent[innerIndex].quantity = parseInt(productQuantityInput[i].value);
         
         //Stockage de la nouvelle quantité dans le localStorage
         let cartItem = JSON.stringify(cartContent);
@@ -199,7 +202,6 @@ function deleteProductFromCart() {
 
                 //On recalcule les totaux
                 getTotals();
-                console.log(cartContent.length);
 
                 if (cartContent.length === 0) {
                     localStorage.removeItem("cart-items");
@@ -213,24 +215,127 @@ function deleteProductFromCart() {
 //Appel à la fonction principale
 generateProductOnCart();
 
+
+
+
+
+
 /*------Section Formulaire------*/
 
-function checkInputData() {
-    //Récupération de l'élément du DOM correspondant au Prénom
+
+
+
+
+
+async function checkInputData() {
+    const contact = {};
+    let productArray = [];
+
+    const nameMask = /[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
+
+    //Récupération et paramétrage de l'élément du DOM correspondant au Prénom
     const inputFirstName = document.getElementById("firstName");
-    const firstNameErrorMsg = document.getElementById("firstNameErrorMsg");
+    const firstNameErrorElement = document.getElementById("firstNameErrorMsg");
+    const firstNameErrorMsg = "Merci de rentrer un prénom valide";
 
     inputFirstName.addEventListener("change", () => {
-        //déclare la regexp
-        //regexp != value
-        //insert p avec message d'erreur
-        let firstNameMask = /\d/;
-        if (firstNameMask.test(inputFirstName.value)) {
-            firstNameErrorMsg.textContent = "Merci de rentrer un prénom valide"
+        if (!nameMask.test(inputFirstName.value)) {
+            firstNameErrorElement.textContent = firstNameErrorMsg;
         } else {
-            firstNameErrorMsg.textContent = '';
+            firstNameErrorElement.textContent = '';
+            contact.firstName = inputFirstName.value;
         };
+    })
+
+    //Récupération et paramétrage de l'élément du DOM correspondant au Nom
+    const inputLastName = document.getElementById("lastName");
+    const lastNameErrorElement = document.getElementById("lastNameErrorMsg");
+    const lastNameErrorMsg = "Merci de rentrer un nom valide";
+
+    inputLastName.addEventListener("change", () => {
+        if (!nameMask.test(inputLastName.value)) {
+            lastNameErrorElement.textContent = lastNameErrorMsg;
+        } else {
+            lastNameErrorElement.textContent = '';
+            contact.lastName = inputLastName.value
+        };
+    })
+
+    //Récupération et paramétrage de l'élément du DOM correspondant à l'adresse
+    const addressMask = /[a-zA-Z0-9àáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
+    const inputAddress = document.getElementById("address");
+    const addressErrorElement = document.getElementById("addressErrorMsg");
+    const addressErrorMsg = "Merci de rentrer une adresse valide";
+
+    inputAddress.addEventListener("change", () => {
+        if (!addressMask.test(inputAddress.value)) {
+            addressErrorElement.textContent = addressErrorMsg;
+        } else {
+            addressErrorElement.textContent = '';
+            contact.address = inputAddress.value
+        };
+    })
+
+    //Récupération et paramétrage de l'élément du DOM correspondant à la ville
+    const inputCity = document.getElementById("city");
+    const cityErrorElement = document.getElementById("cityErrorMsg");
+    const cityErrorMsg = "Merci de rentrer une ville valide";
+
+    inputCity.addEventListener("change", () => {
+        if (!nameMask.test(inputCity.value)) {
+            cityErrorElement.textContent = cityErrorMsg;
+        } else {
+            cityErrorElement.textContent = '';
+            contact.city = inputCity.value
+        };
+    })
+
+    //Récupération et paramétrage de l'élément du DOM correspondant à l'adresse mail
+    const emailMask = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    const inputEmail = document.getElementById("email");
+    const emailErrorElement = document.getElementById("emailErrorMsg");
+    const emailErrorMsg = "Merci de rentrer une adresse email valide";
+
+    inputEmail.addEventListener("change", () => {
+        if (!emailMask.test(inputEmail.value)) {
+            emailErrorElement.textContent = emailErrorMsg;
+        } else {
+            emailErrorElement.textContent = '';
+            contact.email = inputEmail.value
+        };
+    })
+
+    order(contact, productArray);
+}
+
+function order(contactObject, productArray) {
+
+    let orderInfo = {
+        contact: contactObject,
+        products: productArray,
+    };
+    let submitButton = document.getElementById("order");
+
+    submitButton.addEventListener("click", async function (event) {
+        event.preventDefault();
+        for(let i = 0; i < cartContent.length; i++) {
+            productArray.push(cartContent[i].id);
+        }
+        if(Object.keys(contactObject).length >= 5 && productArray.length) {
+            let response = await fetch("http://localhost:3000/api/products/order", {
+                method: 'POST',
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(orderInfo),
+            });
+            let result = await response.json();
+            console.log(productArray);
+            window.location.replace(`../html/confirmation.html?${result.orderId}`);
+        } else {
+            window.alert("Veuillez remplir correctement le formulaire !")
+        }
     })
 }
 
 checkInputData();
+
+
