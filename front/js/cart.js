@@ -226,11 +226,13 @@ generateProductOnCart();
 
 
 
-
+//Création d'une fonction pour vérifier la validité du formulaire
 async function checkInputData() {
+    //Initialisation des conteneurs de données récupérés via la validation du formulaire
     const contact = {};
     let productArray = [];
 
+    //Définition d'une regex pour Prénom, Nom et Ville
     const nameMask = /[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/u;
 
     //Récupération et paramétrage de l'élément du DOM correspondant au Prénom
@@ -238,6 +240,7 @@ async function checkInputData() {
     const firstNameErrorElement = document.getElementById("firstNameErrorMsg");
     const firstNameErrorMsg = "Merci de rentrer un prénom valide";
 
+    //Vérification de la valeur de l'input
     inputFirstName.addEventListener("change", () => {
         if (!nameMask.test(inputFirstName.value)) {
             firstNameErrorElement.textContent = firstNameErrorMsg;
@@ -252,6 +255,7 @@ async function checkInputData() {
     const lastNameErrorElement = document.getElementById("lastNameErrorMsg");
     const lastNameErrorMsg = "Merci de rentrer un nom valide";
 
+    //Vérification de la valeur de l'input
     inputLastName.addEventListener("change", () => {
         if (!nameMask.test(inputLastName.value)) {
             lastNameErrorElement.textContent = lastNameErrorMsg;
@@ -267,6 +271,7 @@ async function checkInputData() {
     const addressErrorElement = document.getElementById("addressErrorMsg");
     const addressErrorMsg = "Merci de rentrer une adresse valide";
 
+    //Vérification de la valeur de l'input
     inputAddress.addEventListener("change", () => {
         if (!addressMask.test(inputAddress.value)) {
             addressErrorElement.textContent = addressErrorMsg;
@@ -280,7 +285,8 @@ async function checkInputData() {
     const inputCity = document.getElementById("city");
     const cityErrorElement = document.getElementById("cityErrorMsg");
     const cityErrorMsg = "Merci de rentrer une ville valide";
-
+    
+    //Vérification de la valeur de l'input
     inputCity.addEventListener("change", () => {
         if (!nameMask.test(inputCity.value)) {
             cityErrorElement.textContent = cityErrorMsg;
@@ -296,6 +302,7 @@ async function checkInputData() {
     const emailErrorElement = document.getElementById("emailErrorMsg");
     const emailErrorMsg = "Merci de rentrer une adresse email valide";
 
+    //Vérification de la valeur de l'input
     inputEmail.addEventListener("change", () => {
         if (!emailMask.test(inputEmail.value)) {
             emailErrorElement.textContent = emailErrorMsg;
@@ -305,37 +312,51 @@ async function checkInputData() {
         };
     })
 
+    //Appel de la fonction pur valider la commande
     order(contact, productArray);
 }
 
+//Créatin d'une fonction pour valider la commande
 function order(contactObject, productArray) {
-
+    //Initialisation de l'objet à envoyer à l'API
     let orderInfo = {
         contact: contactObject,
         products: productArray,
     };
+    //Récupération de l'élément du DOM permettant de commander
     let submitButton = document.getElementById("order");
 
+    //Ajout d'un event listener sur le bouton "Commander"
     submitButton.addEventListener("click", async function (event) {
+        //Pour que la page ne se recharge pas lors du clic
         event.preventDefault();
+        //Récupération des prooduits du panier depuis le localStorage pour les envoyer à l'API
         for(let i = 0; i < cartContent.length; i++) {
             productArray.push(cartContent[i].id);
         }
+        //Si l'objet de contact possède tous les champs requis et qu'il y a un objet dans le panier 
         if(Object.keys(contactObject).length >= 5 && productArray.length) {
+            //Envoi des données à l'API
             let response = await fetch("http://localhost:3000/api/products/order", {
                 method: 'POST',
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(orderInfo),
             });
+            //Récupération de la réponse avec l'order-ID
             let result = await response.json();
-            console.log(productArray);
+            //Suppression des produits du localStorage
+            localStorage.removeItem("cart-items");
+            //Renvoi sur la page de confirmation de commande
             window.location.replace(`../html/confirmation.html?${result.orderId}`);
-        } else {
+        }
+        else {
+            
             window.alert("Veuillez remplir correctement le formulaire !")
         }
     })
 }
 
+//Appel de la fonction principale
 checkInputData();
 
 

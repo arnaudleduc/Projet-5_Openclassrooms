@@ -54,4 +54,5 @@ async function generateProducts() {
     }
 }
 
+//Appel de la fonction principale
 generateProducts();

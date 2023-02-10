@@ -96,5 +96,6 @@ async function mainFunction() {
     stockProductOnCart(productInfo);
 }
 
+//Appel de la fonction principale
 mainFunction();
 
