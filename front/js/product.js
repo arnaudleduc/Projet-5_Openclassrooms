@@ -86,6 +86,8 @@ async function stockProductOnCart(productInfo) {
             //Stockage des données dans localStorage
             let cartItem = JSON.stringify(cartContent);
             localStorage.setItem("cart-items", cartItem);
+        } else {
+            window.alert("Veuillez renseigner une couleur et/ou une quantité !")
         }
     })
 }

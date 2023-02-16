@@ -330,12 +330,14 @@ function order(contactObject, productArray) {
     submitButton.addEventListener("click", async function (event) {
         //Pour que la page ne se recharge pas lors du clic
         event.preventDefault();
-        //Récupération des prooduits du panier depuis le localStorage pour les envoyer à l'API
-        for(let i = 0; i < cartContent.length; i++) {
-            productArray.push(cartContent[i].id);
+        //Récupération des prooduits du panier depuis le localStorage (s'il y en a) pour les envoyer à l'API
+        if (cartContent) {
+            for(let i = 0; i < cartContent.length; i++) {
+                productArray.push(cartContent[i].id);
+            }
         }
         //Si l'objet de contact possède tous les champs requis et qu'il y a un objet dans le panier 
-        if(Object.keys(contactObject).length >= 5 && productArray.length) {
+        if(Object.keys(contactObject).length >= 5 && productArray && productArray.length) {
             //Envoi des données à l'API
             let response = await fetch("http://localhost:3000/api/products/order", {
                 method: 'POST',
@@ -347,11 +349,10 @@ function order(contactObject, productArray) {
             //Suppression des produits du localStorage
             localStorage.removeItem("cart-items");
             //Renvoi sur la page de confirmation de commande
-            window.location.replace(`../html/confirmation.html?${result.orderId}`);
+            window.location.replace(`../html/confirmation.html?orderID=${result.orderId}`);
         }
-        else {
-            
-            window.alert("Veuillez remplir correctement le formulaire !")
+        else {  
+            window.alert("Veuillez choisir une article et/ou remplir correctement le formulaire !")
         }
     })
 }
